@@ -22,6 +22,7 @@ include(${Slicer_USE_FILE})
 add_subdirectory(LineIntensityProfile)
 add_subdirectory(HistogramLabel)
 add_subdirectory(MaxProjectionFilter)
+add_subdirectory(CUASSlicerTools)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
