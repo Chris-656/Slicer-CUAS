@@ -18,7 +18,7 @@ class LineIntensityProfile(ScriptedLoadableModule):
     self.parent.title = "LineIntensityProfile" # TODO make this more human readable by adding spaces
     self.parent.categories = ["FHKTools"]
     self.parent.dependencies = []
-    self.parent.contributors = ["John Doe (AnyWare Corp.)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Chris 656"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
     This is an example of scripted loadable module bundled in an extension.
     """
@@ -55,7 +55,7 @@ class LineIntensityProfileWidget(ScriptedLoadableModuleWidget):
     #
     self.inputSelector1 = slicer.qMRMLNodeComboBox()
     self.inputSelector1.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    self.inputSelector1.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
+    #self.inputSelector1.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
     self.inputSelector1.selectNodeUponCreation = True
     self.inputSelector1.addEnabled = False
     self.inputSelector1.removeEnabled = False
@@ -71,7 +71,7 @@ class LineIntensityProfileWidget(ScriptedLoadableModuleWidget):
     #
     self.inputSelector2 = slicer.qMRMLNodeComboBox()
     self.inputSelector2.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    self.inputSelector2.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
+    #self.inputSelector2.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
     self.inputSelector2.selectNodeUponCreation = True
     self.inputSelector2.addEnabled = False
     self.inputSelector2.removeEnabled = False
@@ -86,37 +86,37 @@ class LineIntensityProfileWidget(ScriptedLoadableModuleWidget):
     # input ruler selector
     #
     self.inputRuler = slicer.qMRMLNodeComboBox()
-    self.inputRuler.nodeTypes = ( ("vtkMRMLAnnotationRulerNode"), "" )
+    self.inputRuler.nodeTypes = ( ("vtkMRMLMarkupsLineNode"), "" )
 
     self.inputRuler.selectNodeUponCreation = True
     self.inputRuler.addEnabled = False
-    self.inputRuler.removeEnabled = False
+    self.inputRuler.removeEnabled = True
     self.inputRuler.noneEnabled = False
     self.inputRuler.showHidden = False
     self.inputRuler.showChildNodeTypes = False
     self.inputRuler.setMRMLScene( slicer.mrmlScene )
-    self.inputRuler.setToolTip( "Select the ruler to get intensity profile." )
+    self.inputRuler.setToolTip( "!Select the ruler to get intensity profile." )
     parametersFormLayout.addRow("Input Ruler: ", self.inputRuler)
 
 
-    
-    
+
+
     #
     # output chart
     #
-    self.outputChartNode = slicer.qMRMLNodeComboBox()
-    self.outputChartNode.nodeTypes = ( ("vtkMRMLChartNode"), "" )
+    self.outputPlotNode = slicer.qMRMLNodeComboBox()
+    self.outputPlotNode.nodeTypes = ( ("vtkMRMLPlotChartNode"), "" )
 
-    self.outputChartNode.selectNodeUponCreation = True
-    self.outputChartNode.addEnabled = True
-    self.outputChartNode.removeEnabled = False
-    self.outputChartNode.noneEnabled = True
-    self.outputChartNode.renameEnabled = True    
-    self.outputChartNode.showHidden = False
-    self.outputChartNode.showChildNodeTypes = False
-    self.outputChartNode.setMRMLScene( slicer.mrmlScene )
-    self.outputChartNode.setToolTip( "Select the Chartnode" )
-    parametersFormLayout.addRow("Chart: ", self.outputChartNode)
+    self.outputPlotNode.selectNodeUponCreation = True
+    self.outputPlotNode.addEnabled = True
+    self.outputPlotNode.removeEnabled = False
+    self.outputPlotNode.noneEnabled = True
+    self.outputPlotNode.renameEnabled = True
+    self.outputPlotNode.showHidden = False
+    self.outputPlotNode.showChildNodeTypes = False
+    self.outputPlotNode.setMRMLScene( slicer.mrmlScene )
+    self.outputPlotNode.setToolTip( "Select the Chartnode" )
+    parametersFormLayout.addRow("Chart: ", self.outputPlotNode)
 
 
     #
@@ -129,7 +129,7 @@ class LineIntensityProfileWidget(ScriptedLoadableModuleWidget):
 
     # connections
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
-    
+
 
 
     # Add vertical spacer
@@ -139,14 +139,15 @@ class LineIntensityProfileWidget(ScriptedLoadableModuleWidget):
     pass
 
   def onSelect(self):
-    self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
+    self.applyButton.enabled = self.inputSelector.currentNode()
+    #self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
 
   def onApplyButton(self):
     logic = LineIntensityProfileLogic()
 
     print("Run the algorithm")
 
-    logic.run(self.inputSelector1.currentNode(), self.inputSelector2.currentNode(), self.inputRuler.currentNode(),self.outputChartNode.currentNode())
+    logic.run(self.inputSelector1.currentNode(), self.inputSelector2.currentNode(), self.inputRuler.currentNode(),self.outputPlotNode.currentNode())
 
 
 #
@@ -210,15 +211,15 @@ class LineIntensityProfileLogic(ScriptedLoadableModuleLogic):
     imageData = vtk.vtkImageData()
     slicer.qMRMLUtils().qImageToVtkImageData(qimage,imageData)
 
-    annotationLogic = slicer.modules.annotations.logic()
+    annotationLogic = slicer.modules.markup.logic()
+    #annotationLogic = slicer.modules.annotation.logic()
 
   def run(self,inputVolume1,inputVolume2,inputRuler,outputChart):
     """
     Run the actual algorithm
     """
 
-    self.delayDisplay('Running the aglorithm')
-    print('Before running the calculations')	
+    print('Running the aglorithm')
 
     if not inputRuler or not outputChart or (not inputVolume1 and not inputVolume2):
       print('Input not initialized!')
@@ -234,18 +235,18 @@ class LineIntensityProfileLogic(ScriptedLoadableModuleLogic):
 
     #print(str(volumeSamples1))
     #print(str(volumeSamples2))
-    
+
     imageSamples = [volumeSamples1, volumeSamples2]
     legendNames = [inputVolume1.GetName(), inputVolume2.GetName()]
-    
+
     self.showChart(imageSamples,legendNames,outputChart)
 
     return True
 
   def showChart(self, samples, names, outputChart):
     lm = slicer.app.layoutManager()
-    lm.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpQuantitativeView)
-    
+    lm.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpPlotView)
+
     chartName = outputChart.GetName()
     count = 0
     doubleArrays = []
@@ -253,15 +254,18 @@ class LineIntensityProfileLogic(ScriptedLoadableModuleLogic):
       print("count=%d \n"% (count))
       #print(names)
       arrayName = 'prof-'+names[count]
-      
+
       try:
         arrayNode = slicer.util.getNode(arrayName)
       except:
-        arrayNode = slicer.mrmlScene.AddNode(slicer.vtkMRMLDoubleArrayNode())
+        arrayNode = slicer.mrmlScene.AddNode(slicer.vtkMRMLTableNode())
         arrayNode.SetName(arrayName)
+
       count=count+1
-      #print(arrayNode.GetName())
-      array = arrayNode.GetArray()
+      print(arrayNode.GetName())
+      slicer.util.updateTableFromArray(arrayNode, sample)
+      array = arrayNode.GetTable()
+
       nDataPoints = sample.GetNumberOfTuples()
       array.SetNumberOfTuples(nDataPoints)
       array.SetNumberOfComponents(3)
@@ -273,15 +277,15 @@ class LineIntensityProfileLogic(ScriptedLoadableModuleLogic):
 
       doubleArrays.append(arrayNode)
 
-    #chartNode = slicer.mrmlScene.AddNode(slicer.vtkMRMLChartNode()) 
+    #chartNode = slicer.mrmlScene.AddNode(slicer.vtkMRMLChartNode())
 
     cvNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLChartViewNode')
     cvNodes.SetReferenceCount(cvNodes.GetReferenceCount()-1)
     cvNodes.InitTraversal()
     cvNode = cvNodes.GetNextItemAsObject()
-    
+
     chartNode = outputChart
-  
+
     for pairs in zip(names, doubleArrays):
       chartNode.AddArray(pairs[0],pairs[1].GetID())
     cvNode.SetChartNodeID(chartNode.GetID())
@@ -289,8 +293,15 @@ class LineIntensityProfileLogic(ScriptedLoadableModuleLogic):
     return
 
   def probeVolume(self, volumeNode, rulerNode):
-    p0ras = rulerNode.GetPolyData().GetPoint(0) + (1,)
-    p1ras = rulerNode.GetPolyData().GetPoint(1) + (1,)
+    p0ras = [0, 0, 0]
+    p1ras = [0, 0, 0]
+    #p0ras = rulerNode.GetPolyData().GetPoint(0) + (1,)
+    #p1ras = rulerNode.GetPolyData().GetPoint(1) + (1,)
+
+    rulerNode.GetLineStartPosition(p0ras)
+    rulerNode.GetLineEndPosition(p1ras)
+    p0ras.append(1.0)
+    p1ras.append(1.0)
 
     ras2ijk = vtk.vtkMatrix4x4()
     volumeNode.GetRASToIJKMatrix(ras2ijk)
@@ -301,6 +312,7 @@ class LineIntensityProfileLogic(ScriptedLoadableModuleLogic):
     line.SetPoint1(p0ijk[0], p0ijk[1], p0ijk[2])
     line.SetPoint2(p1ijk[0], p1ijk[1], p1ijk[2])
     line.SetResolution(100)
+    print(p0ijk[0])
 
     probe = vtk.vtkProbeFilter()
     probe.SetInputConnection(line.GetOutputPort())

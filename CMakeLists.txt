@@ -23,6 +23,7 @@ add_subdirectory(LineIntensityProfile)
 add_subdirectory(HistogramLabel)
 add_subdirectory(MaxProjectionFilter)
 add_subdirectory(CUASSlicerTools)
+add_subdirectory(LineProfile)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
